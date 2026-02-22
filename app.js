@@ -183,7 +183,7 @@ function generateQRCode(text, container) {
 }
 
 // ===== Core UI Updates =====
-function updateUI() { updateHomeStats(); updateWaterFill(); updateHeaderCenter(); updateTodayChart(); checkPaceAndNotify(); }
+function updateUI() { updateHomeStats(); updateWaterFill(); updateHeaderCenter(); checkPaceAndNotify(); if (!appState.today.pouring) updateTodayChart(); }
 
 function updateHomeStats() {
     const total = appState.today.totalMl + appState.today.bufferMl;
@@ -308,8 +308,15 @@ function updateDailyRecords() {
     const canvas = document.getElementById('dailyChart');
     const sel = document.querySelector('#dailyTab .daily-selector .period-btn.active')?.dataset.daily || 'today';
     const slots = Array.from({ length: 24 }, (_, i) => ({ hour: i, ml: 0, hasData: false, isDummy: false }));
-    if (sel === 'today' && appState.today.history.length > 0) {
+    if (sel === 'today') {
         appState.today.history.forEach(e => { const h = parseInt(e.time.split(':')[0]); if (h >= 0 && h < 24) { slots[h].ml += e.ml; slots[h].hasData = true; } });
+        const ch = new Date().getHours();
+        for (let h = 6; h < ch; h++) {
+            if (slots[h] && !slots[h].hasData && todayDummyData[h]) {
+                slots[h].ml = todayDummyData[h];
+                slots[h].hasData = true; slots[h].isDummy = true;
+            }
+        }
     } else {
         const p = globalDayPatterns[sel] || globalDayPatterns.today;
         p.hours.forEach((h, i) => { if (h < 24) { slots[h].ml = p.amounts[i]; slots[h].hasData = true; slots[h].isDummy = true; } });
@@ -652,11 +659,12 @@ document.addEventListener('DOMContentLoaded', function () {
         appState.onboardingCompleted = true; document.getElementById('onboardingModal').classList.add('hidden');
     });
 
-    // Records tabs
-    document.querySelectorAll('.records-tab').forEach(tab => tab.addEventListener('click', function () {
-        document.querySelectorAll('.records-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');
-        document.querySelectorAll('#recordsScreen .tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(`${this.dataset.tab}Tab`).classList.add('active');
+    // Records tabs (upper only)
+    document.querySelectorAll('.records-header .records-tab').forEach(tab => tab.addEventListener('click', function () {
+        document.querySelectorAll('.records-header .records-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');
+        document.querySelectorAll('.records-content > .tab-content').forEach(c => c.classList.remove('active'));
+        const targetTab = document.getElementById(`${this.dataset.tab}Tab`);
+        if (targetTab) targetTab.classList.add('active');
         updateRecordsContent(this.dataset.tab);
     }));
 
