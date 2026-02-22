@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PureNext - 水分摂取管理</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app" id="app">
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12,2C13.09,2 14.14,2.41 14.95,3.15C16.68,4.71 19.5,8.58 19.5,12A7.5,7.5 0 0,1 12,19.5A7.5,7.5 0 0,1 4.5,12C4.5,8.58 7.32,4.71 9.05,3.15C9.86,2.41 10.91,2 12,2Z" />
+                </svg>
+                PureNext
+            </div>
+            <div class="header-center" id="headerCenter">今日はあと2000mlで100%！</div>
+            <button class="notify-toggle" id="notifyToggle">通知</button>
+        </div>
+
+        <div class="main-content">
+            <!-- ===== HOME ===== -->
+            <div class="screen active" id="homeScreen">
+                <div class="home-container">
+                    <div class="pace-notification" id="paceNotification">水分補給のペースが少しゆっくりかも 🚰</div>
+
+                    <div class="main-section">
+                        <!-- LEFT -->
+                        <div class="side-controls left">
+                            <button class="side-pour-button" id="sidePourButton">取水</button>
+                            <button class="side-preset-btn" data-ml="10">10ml</button>
+                            <button class="side-preset-btn" data-ml="50">50ml</button>
+                        </div>
+
+                        <!-- CENTER: Human Silhouette -->
+                        <div class="human-section">
+                            <div class="silhouette-container">
+                                <svg class="human-silhouette" viewBox="0 0 100 220">
+                                    <!-- Stylish minimal silhouette -->
+                                    <defs>
+                                        <mask id="humanMask">
+                                            <rect width="100" height="220" fill="black" />
+                                            <!-- Head -->
+                                            <circle cx="50" cy="18" r="12" fill="white" />
+                                            <!-- Neck -->
+                                            <rect x="46" y="30" width="8" height="8" rx="2" fill="white" />
+                                            <!-- Torso -->
+                                            <path
+                                                d="M34 38 Q38 35 50 35 Q62 35 66 38 L64 82 Q62 88 58 92 L42 92 Q38 88 36 82 Z"
+                                                fill="white" />
+                                            <!-- Left Arm -->
+                                            <path d="M34 40 Q28 44 24 52 L22 70 Q23 74 26 72 L30 68 Q34 62 35 52 Z"
+                                                fill="white" />
+                                            <!-- Right Arm -->
+                                            <path d="M66 40 Q72 44 76 52 L78 70 Q77 74 74 72 L70 68 Q66 62 65 52 Z"
+                                                fill="white" />
+                                            <!-- Hips -->
+                                            <path d="M42 92 Q46 98 50 100 Q54 98 58 92 L56 112 L44 112 Z"
+                                                fill="white" />
+                                            <!-- Left Leg -->
+                                            <path d="M44 112 L40 160 Q40 166 42 168 L46 168 Q48 166 47 160 L48 112 Z"
+                                                fill="white" />
+                                            <!-- Right Leg -->
+                                            <path d="M52 112 L53 160 Q52 166 54 168 L58 168 Q60 166 60 160 L56 112 Z"
+                                                fill="white" />
+                                            <!-- Left Calf -->
+                                            <path d="M42 168 L40 200 Q41 206 44 206 L47 206 Q49 204 48 200 L46 168 Z"
+                                                fill="white" />
+                                            <!-- Right Calf -->
+                                            <path d="M54 168 L53 200 Q54 206 56 206 L59 206 Q61 204 60 200 L58 168 Z"
+                                                fill="white" />
+                                            <!-- Feet -->
+                                            <ellipse cx="44" cy="210" rx="6" ry="3" fill="white" />
+                                            <ellipse cx="57" cy="210" rx="6" ry="3" fill="white" />
+                                        </mask>
+                                        <linearGradient id="waterGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                            <stop offset="0%" stop-color="#0ea5e9" />
+                                            <stop offset="50%" stop-color="#38bdf8" />
+                                            <stop offset="100%" stop-color="#7dd3fc" />
+                                        </linearGradient>
+                                    </defs>
+
+                                    <!-- Body outline -->
+                                    <circle class="human-body" cx="50" cy="18" r="12" />
+                                    <rect class="human-body" x="46" y="30" width="8" height="8" rx="2" />
+                                    <path class="human-body"
+                                        d="M34 38 Q38 35 50 35 Q62 35 66 38 L64 82 Q62 88 58 92 L42 92 Q38 88 36 82 Z" />
+                                    <path class="human-body"
+                                        d="M34 40 Q28 44 24 52 L22 70 Q23 74 26 72 L30 68 Q34 62 35 52 Z" />
+                                    <path class="human-body"
+                                        d="M66 40 Q72 44 76 52 L78 70 Q77 74 74 72 L70 68 Q66 62 65 52 Z" />
+                                    <path class="human-body" d="M42 92 Q46 98 50 100 Q54 98 58 92 L56 112 L44 112 Z" />
+                                    <path class="human-body"
+                                        d="M44 112 L40 160 Q40 166 42 168 L46 168 Q48 166 47 160 L48 112 Z" />
+                                    <path class="human-body"
+                                        d="M52 112 L53 160 Q52 166 54 168 L58 168 Q60 166 60 160 L56 112 Z" />
+                                    <path class="human-body"
+                                        d="M42 168 L40 200 Q41 206 44 206 L47 206 Q49 204 48 200 L46 168 Z" />
+                                    <path class="human-body"
+                                        d="M54 168 L53 200 Q54 206 56 206 L59 206 Q61 204 60 200 L58 168 Z" />
+                                    <ellipse class="human-body" cx="44" cy="210" rx="6" ry="3" />
+                                    <ellipse class="human-body" cx="57" cy="210" rx="6" ry="3" />
+
+                                    <!-- Water fill -->
+                                    <rect id="waterFill" x="0" y="220" width="100" height="0" fill="url(#waterGradient)"
+                                        mask="url(#humanMask)" style="transition:all .8s cubic-bezier(.4,0,.2,1)" />
+                                </svg>
+                            </div>
+
+                            <div class="human-controls">
+                                <div class="buffer-display" id="bufferDisplay">現在 0ml</div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="side-controls right">
+                            <button class="side-preset-btn" data-ml="100">100ml</button>
+                            <button class="side-preset-btn" data-ml="500">500ml</button>
+                            <button class="side-preset-btn" id="sideCustomBtn">任意</button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Panel (compact 4-col) -->
+                    <div class="stats-panel">
+                        <div class="stat-item">
+                            <span class="stat-value" id="todayTotal">0ml</span>
+                            <span class="stat-label">本日の合計</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="goalDisplay">2000ml</span>
+                            <span class="stat-label">目標</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="rateDisplay">0%</span>
+                            <span class="stat-label">達成率</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="remainDisplay">2000ml</span>
+                            <span class="stat-label">残り</span>
+                        </div>
+                    </div>
+
+                    <!-- Today's intake log -->
+                    <div class="today-chart-section">
+                        <h3>💧 今日の飲水ログ <span class="total-badge" id="todayLogTotal">合計: 0ml</span></h3>
+                        <div class="chart-container">
+                            <canvas id="todayChart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== RECORDS ===== -->
+            <div class="screen" id="recordsScreen">
+                <div class="records-header">
+                    <div class="records-tabs">
+                        <div class="records-tab active" data-tab="daily">日別</div>
+                        <div class="records-tab" data-tab="week">週別</div>
+                        <div class="records-tab" data-tab="month">月別</div>
+                        <div class="records-tab" data-tab="detail">詳細</div>
+                    </div>
+                    <button class="share-btn" id="shareRecordsBtn">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M18,16.08C17.24,16.08 16.56,16.38 16.04,16.85L8.91,12.7C8.96,12.47 9,12.24 9,12C9,11.76 8.96,11.53 8.91,11.3L15.96,7.19C16.5,7.69 17.21,8 18,8A3,3 0 0,0 21,5A3,3 0 0,0 18,2A3,3 0 0,0 15,5C15,5.24 15.04,5.47 15.09,5.7L8.04,9.81C7.5,9.31 6.79,9 6,9A3,3 0 0,0 3,12A3,3 0 0,0 6,15C6.79,15 7.5,14.69 8.04,14.19L15.16,18.34C15.11,18.55 15.08,18.77 15.08,19C15.08,20.61 16.39,21.91 18,21.91C19.61,21.91 20.92,20.61 20.92,19A2.92,2.92 0 0,0 18,16.08Z" />
+                        </svg>
+                        共有
+                    </button>
+                </div>
+
+                <div class="records-content">
+                    <div class="tab-content active" id="dailyTab">
+                        <div class="daily-selector">
+                            <button class="period-btn active" data-daily="today">月</button>
+                            <button class="period-btn" data-daily="yesterday">火</button>
+                            <button class="period-btn" data-daily="3daysago">水</button>
+                            <button class="period-btn" data-daily="4daysago">木</button>
+                            <button class="period-btn" data-daily="5daysago">金</button>
+                            <button class="period-btn" data-daily="6daysago">土</button>
+                            <button class="period-btn" data-daily="7daysago">日</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="dailyChart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="weekTab">
+                        <div class="chart-container">
+                            <canvas id="weekChart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="monthTab">
+                        <div class="chart-container" style="min-height:260px;">
+                            <canvas id="monthChart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="detailTab">
+                        <div class="detail-history-container">
+                            <div class="history-date-selector">
+                                <input type="date" id="historyDate" class="date-input" />
+                                <button class="btn btn-primary" id="loadHistoryBtn"
+                                    style="padding:10px 16px;">表示</button>
+                            </div>
+                            <div class="chart-container" style="margin-bottom:20px; display:none;"
+                                id="detailChartContainer">
+                                <canvas id="detailChart" class="chart-canvas"></canvas>
+                            </div>
+                            <div class="history-content" id="historyContent">
+                                <p style="text-align:center;color:var(--text-muted);padding:30px 0;font-size:13px;">
+                                    日付を選択して記録を表示
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Milk Section -->
+                <div class="milk-independent-section">
+                    <div class="milk-tab-header">
+                        <h3>🍼 赤ちゃん用粉ミルク記録</h3>
+                        <p class="milk-description">赤ちゃんがいつ何ml飲んだかを記録できます</p>
+                    </div>
+                    <div class="records-tabs" style="margin-bottom:15px; background:rgba(255,255,255,0.5);">
+                        <div class="records-tab milk-tab active" data-milk-tab="daily">日別</div>
+                        <div class="records-tab milk-tab" data-milk-tab="week">週別</div>
+                        <div class="records-tab milk-tab" data-milk-tab="month">月別</div>
+                        <div class="records-tab milk-tab" data-milk-tab="detail">詳細</div>
+                    </div>
+
+                    <div class="milk-tab-content active" id="milkDailyTab">
+                        <div class="daily-selector">
+                            <button class="period-btn active" data-milk-daily="today">月</button>
+                            <button class="period-btn" data-milk-daily="yesterday">火</button>
+                            <button class="period-btn" data-milk-daily="3daysago">水</button>
+                            <button class="period-btn" data-milk-daily="4daysago">木</button>
+                            <button class="period-btn" data-milk-daily="5daysago">金</button>
+                            <button class="period-btn" data-milk-daily="6daysago">土</button>
+                            <button class="period-btn" data-milk-daily="7daysago">日</button>
+                        </div>
+                        <div class="chart-container"><canvas id="milkDailyChart" class="chart-canvas"></canvas></div>
+                    </div>
+                    <div class="milk-tab-content" id="milkWeekTab" style="display:none;">
+                        <div class="chart-container"><canvas id="milkWeekChart" class="chart-canvas"></canvas></div>
+                    </div>
+                    <div class="milk-tab-content" id="milkMonthTab" style="display:none;">
+                        <div class="chart-container"><canvas id="milkMonthChart" class="chart-canvas"></canvas></div>
+                    </div>
+                    <div class="milk-tab-content" id="milkDetailTab" style="display:none;">
+                        <div class="detail-history-container">
+                            <div class="history-date-selector">
+                                <input type="date" id="milkHistoryDate" class="date-input" />
+                                <button class="btn btn-primary" id="loadMilkHistoryBtn"
+                                    style="padding:10px 16px;background:var(--accent);color:#fff;border:none;">表示</button>
+                            </div>
+                            <div class="chart-container" style="margin-bottom:20px; display:none;"
+                                id="milkDetailChartContainer">
+                                <canvas id="milkDetailChart" class="chart-canvas"></canvas>
+                            </div>
+                            <div class="history-content" id="milkHistoryContent">
+                                <p style="text-align:center;color:var(--text-muted);padding:30px 0;font-size:13px;">
+                                    日付を選択して記録を表示</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== GOAL ===== -->
+            <div class="screen" id="goalScreen">
+                <div class="goal-container">
+                    <div class="current-goal">
+                        <div class="goal-value" id="currentGoalValue">2000</div>
+                        <div class="goal-label">ml / 日</div>
+                    </div>
+                    <div class="goal-controls">
+                        <input type="range" class="goal-slider" id="goalSlider" min="800" max="5000" step="50"
+                            value="2000">
+                        <input type="number" class="goal-input" id="goalInput" min="800" max="5000" value="2000">
+                    </div>
+                    <div class="reference-panel">
+                        <div class="reference-title">参考値：<span id="recommendedGoal">2100</span>ml</div>
+                        <div class="reference-formula">体重×35ml×活動係数</div>
+                        <div class="activity-explanation">
+                            <div class="activity-title">活動係数について</div>
+                            <div class="activity-items">
+                                <div class="activity-item">
+                                    <span class="level-badge low">🛋️ 低め(1.0)</span>
+                                    <span class="level-desc">デスクワーク中心</span>
+                                </div>
+                                <div class="activity-item">
+                                    <span class="level-badge normal">🚶 ふつう(1.1)</span>
+                                    <span class="level-desc">適度な運動・日常活動</span>
+                                </div>
+                                <div class="activity-item">
+                                    <span class="level-badge high">🏃 高め(1.2)</span>
+                                    <span class="level-desc">スポーツ・肉体労働</span>
+                                </div>
+                            </div>
+                            <div class="why-note">活動量が多いほど発汗で水分が失われるため、<br>その分を補給する必要があります。</div>
+                        </div>
+                        <div class="disclaimer">
+                            <p>参考値です。体調や医師の指示を優先してください。</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="saveGoalBtn" style="width:100%;padding:14px;">目標を保存</button>
+                </div>
+            </div>
+
+            <!-- ===== POWER SAVE ===== -->
+            <div class="screen" id="powerSaveScreen">
+                <div class="power-save-container">
+                    <div class="current-status">
+                        <div class="status-indicator">
+                            <div class="status-light off" id="statusLight"></div>
+                            <span class="status-text" id="statusText">節電モード: OFF</span>
+                        </div>
+                        <button class="power-toggle-btn" id="powerToggleBtn">
+                            <span id="toggleText">節電モードをONにする</span>
+                        </button>
+                    </div>
+
+                    <div class="timer-settings">
+                        <h3>
+                            タイマー設定
+                            <button class="timer-toggle" id="timerToggle" aria-label="タイマーON/OFF"></button>
+                        </h3>
+                        <div class="timer-controls" id="timerControlsBody">
+                            <div class="time-inputs">
+                                <label>開始</label>
+                                <input type="time" id="startTime" class="time-input" value="22:00">
+                                <label>終了</label>
+                                <input type="time" id="endTime" class="time-input" value="06:00">
+                            </div>
+                            <div class="weekday-selector">
+                                <label>曜日指定</label>
+                                <div class="weekday-buttons">
+                                    <button class="weekday-btn active" data-day="0">日</button>
+                                    <button class="weekday-btn active" data-day="1">月</button>
+                                    <button class="weekday-btn active" data-day="2">火</button>
+                                    <button class="weekday-btn active" data-day="3">水</button>
+                                    <button class="weekday-btn active" data-day="4">木</button>
+                                    <button class="weekday-btn active" data-day="5">金</button>
+                                    <button class="weekday-btn active" data-day="6">土</button>
+                                </div>
+                            </div>
+                            <div class="timer-actions">
+                                <button class="btn btn-secondary" id="clearTimerBtn">クリア</button>
+                                <button class="btn btn-primary" id="saveTimerBtn">保存</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="power-save-info">
+                        <h4>節電モードについて</h4>
+                        <ul>
+                            <li>温水温度を下げて電気代を節約</li>
+                            <li>タイマーで自動オン/オフが可能</li>
+                            <li>曜日指定で平日・休日を使い分け</li>
+                            <li>手動でいつでも切り替え可能</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== CONTRACT ===== -->
+            <div class="screen" id="contractScreen">
+                <div class="info-cards">
+                    <div class="info-card"><span class="card-label">プラン名</span><span class="card-value">PureNext</span>
+                    </div>
+                    <div class="info-card"><span class="card-label">サーバー機種</span><span class="card-value">PNX-01</span>
+                    </div>
+                    <div class="info-card"><span class="card-label">契約ID</span><span class="card-value">PN-123456</span>
+                    </div>
+                    <div class="info-card"><span class="card-label">次回配送</span><span
+                            class="card-value">2025-09-15</span></div>
+                    <div class="info-card"><span class="card-label">お届け先</span><span class="card-value">登録住所</span>
+                    </div>
+                </div>
+                <div class="filter-section">
+                    <h3>フィルター交換情報</h3>
+                    <div class="info-cards" style="padding:0;">
+                        <div class="info-card"><span class="card-label">型番</span><span class="card-value"
+                                id="filterModel">PureNext Filter PRO</span></div>
+                        <div class="info-card"><span class="card-label">最終交換日</span><span class="card-value"
+                                id="lastReplacementDate">2024-09-01</span></div>
+                        <div class="info-card"><span class="card-label">次回交換予定</span><span class="card-value"
+                                id="nextReplacementDate">2025-03-01</span></div>
+                    </div>
+                    <div class="filter-purchase">
+                        <div class="filter-buttons">
+                            <button class="filter-action-btn" id="filterPurchaseBtn">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M19,7H15V6A3,3 0 0,0 12,3A3,3 0 0,0 9,6V7H5A1,1 0 0,0 4,8V19A3,3 0 0,0 7,22H17A3,3 0 0,0 20,19V8A1,1 0 0,0 19,7M11,6A1,1 0 0,1 12,5A1,1 0 0,1 13,6V7H11V6Z" />
+                                </svg>
+                                フィルターを購入する
+                            </button>
+                            <button class="filter-action-btn" id="repairRequestBtn">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M22.7,19L13.6,9.9C14.5,7.6 14,4.9 12.1,3C10.1,1 7.1,0.6 4.7,1.7L9,6L6,9L1.6,4.7C0.4,7.1 0.9,10.1 2.9,12.1C4.8,14 7.5,14.5 9.8,13.6L18.9,22.7C19.3,23.1 19.9,23.1 20.3,22.7L22.6,20.4C23.1,20 23.1,19.3 22.7,19Z" />
+                                </svg>
+                                修理を依頼する
+                            </button>
+                        </div>
+                        <p class="filter-note">6ヶ月に1度の交換をおすすめします</p>
+                    </div>
+                </div>
+                <div class="contract-section">
+                    <h3>サポート・紹介</h3>
+                    <div class="support-buttons">
+                        <button class="btn btn-info" id="contractContactBtn"
+                            style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z" />
+                            </svg>
+                            問い合わせ
+                        </button>
+                        <button class="btn btn-success" id="contractInviteBtn"
+                            style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M17,13H13V17H11V13H7V11H11V7H13V11H17V13Z" />
+                            </svg>
+                            友達に紹介
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== PROFILE / REGISTRATION ===== -->
+            <div class="screen" id="profileScreen">
+                <div class="profile-form">
+                    <div class="form-group"><label class="form-label">氏名</label><input type="text" class="form-input"
+                            id="profileName"></div>
+                    <div class="form-group"><label class="form-label">住所</label><input type="text" class="form-input"
+                            id="profileAddress"></div>
+                    <div class="form-group"><label class="form-label">生年月日</label><input type="date" class="form-input"
+                            id="profileBirth"></div>
+                    <div class="form-group">
+                        <label class="form-label">性別</label>
+                        <select class="form-select" id="profileSex">
+                            <option value="未選択">未選択</option>
+                            <option value="男性">男性</option>
+                            <option value="女性">女性</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">身長 (cm)</label><input type="number"
+                            class="form-input" id="profileHeight" min="0" max="300"></div>
+                    <div class="form-group"><label class="form-label">体重 (kg)</label><input type="number"
+                            class="form-input" id="profileWeight" min="0" max="400"></div>
+                    <div class="form-group">
+                        <label class="form-label">活動量</label>
+                        <select class="form-select" id="profileActivity">
+                            <option value="低め">低め</option>
+                            <option value="ふつう" selected>ふつう</option>
+                            <option value="高め">高め</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="saveProfileBtn">保存</button>
+                        <button class="btn btn-secondary" id="recalcBtn">推奨量を再計算</button>
+                    </div>
+
+                    <!-- Weight Management -->
+                    <div class="profile-section">
+                        <h3>体重管理</h3>
+                        <div class="weight-management">
+                            <div class="form-group">
+                                <label class="form-label">今日の体重 (kg)</label>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <div style="flex:1;font-size:20px;font-weight:700;color:var(--primary);"
+                                        id="weightDisplayValue">-- kg</div>
+                                    <button class="btn btn-accent" id="openWeightKeypad"
+                                        style="padding:10px 20px;">記録</button>
+                                </div>
+                            </div>
+                            <div class="weight-chart">
+                                <canvas id="weightChartCanvas" style="width:100%;height:200px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group Sharing -->
+                    <div class="profile-section">
+                        <h3>👥 グループ共有設定</h3>
+                        <div class="group-settings">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="enableGroupSharing" style="margin-right:6px;">
+                                    記録をグループで共有する
+                                </label>
+                            </div>
+                            <div class="form-group hidden" id="groupIdSection">
+                                <label class="form-label">グループID</label>
+                                <div style="display:flex;gap:6px;">
+                                    <input type="text" class="form-input" id="groupId" placeholder="グループIDを入力" readonly>
+                                    <button class="btn btn-secondary" id="generateGroupIdBtn"
+                                        style="padding:8px 14px;white-space:nowrap;">生成</button>
+                                </div>
+                                <div id="qrCodeArea"></div>
+                            </div>
+                            <div class="form-group hidden" id="joinGroupSection">
+                                <label class="form-label">他のグループに参加</label>
+                                <div style="display:flex;gap:6px;">
+                                    <input type="text" class="form-input" id="joinGroupId" placeholder="相手のグループIDを入力">
+                                    <button class="btn btn-success" id="joinGroupBtn"
+                                        style="padding:8px 14px;white-space:nowrap;">参加</button>
+                                </div>
+                            </div>
+                            <div class="form-group hidden" id="groupMembersSection">
+                                <label class="form-label">グループメンバー</label>
+                                <div class="group-members" id="groupMembersList">
+                                    <p style="color:var(--text-muted);font-size:12px;">メンバーなし</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== COLUMN (former Health) ===== -->
+            <div class="screen" id="columnScreen">
+                <!-- Column list view -->
+                <div class="column-container" id="columnListView">
+                    <h3>💧 水の健康コラム</h3>
+                    <!-- Cards are generated by JS -->
+                    <div id="columnCardsList"></div>
+
+                    <div class="tips-section">
+                        <h4>🎯 今日から始められる水分補給習慣</h4>
+                        <div class="tips-grid">
+                            <div class="tip-card"><span class="tip-icon">📱</span>
+                                <p><strong>アプリで記録</strong><br>毎日の摂取量をトラッキング</p>
+                            </div>
+                            <div class="tip-card"><span class="tip-icon">💧</span>
+                                <p><strong>ボトルを持参</strong><br>いつでも水分補給できる環境を</p>
+                            </div>
+                            <div class="tip-card"><span class="tip-icon">⏰</span>
+                                <p><strong>時間を決める</strong><br>2時間ごとに水分補給タイムを</p>
+                            </div>
+                            <div class="tip-card"><span class="tip-icon">🌡️</span>
+                                <p><strong>温度調節</strong><br>体温に近い温度が吸収されやすい</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Column detail view (hidden initially) -->
+                <div class="column-detail hidden" id="columnDetailView">
+                    <button class="back-btn" id="columnBackBtn">← コラム一覧に戻る</button>
+                    <h3 id="columnDetailTitle"></h3>
+                    <div class="article-body" id="columnDetailBody"></div>
+                    <div style="text-align:center; margin-top:20px; padding-bottom:20px;">
+                        <button class="btn btn-secondary" id="columnBackBtnBottom" style="padding:12px 24px;">←
+                            コラム一覧に戻る</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER NAV ===== -->
+        <div class="footer">
+            <div class="tab-item active" data-screen="home">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+                </svg>
+                <span class="tab-label">ホーム</span>
+                <div class="tab-dot"></div>
+            </div>
+            <div class="tab-item" data-screen="records">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22,21H2V3H4V19H6V17H10V19H12V16H16V19H18V17H22V21Z" />
+                </svg>
+                <span class="tab-label">記録</span>
+                <div class="tab-dot"></div>
+            </div>
+            <div class="tab-item" data-screen="goal">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" />
+                </svg>
+                <span class="tab-label">目標</span>
+                <div class="tab-dot"></div>
+            </div>
+            <div class="tab-item" data-screen="powerSave">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M16.56,5.44L15.11,6.89C16.84,7.94 18,9.83 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12C6,9.83 7.16,7.94 8.88,6.88L7.44,5.44C5.36,6.88 4,9.28 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12C20,9.28 18.64,6.88 16.56,5.44M13,3H11V13H13" />
+                </svg>
+                <span class="tab-label">節電</span>
+                <div class="tab-dot"></div>
+            </div>
+            <div class="tab-item" data-screen="contract">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V5H19V19Z" />
+                </svg>
+                <span class="tab-label">契約</span>
+                <div class="tab-dot"></div>
+            </div>
+            <div class="tab-item" data-screen="profile">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                </svg>
+                <span class="tab-label">登録</span>
+                <div class="tab-dot"></div>
+            </div>
+            <div class="tab-item" data-screen="column">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M7 7H17V9H7V7M7 11H17V13H7V11M7 15H14V17H7V15Z" />
+                </svg>
+                <span class="tab-label">コラム</span>
+                <div class="tab-dot"></div>
+            </div>
+        </div>
+
+        <!-- ===== Onboarding Modal ===== -->
+        <div class="modal hidden" id="onboardingModal">
+            <div class="modal-content">
+                <h2 class="modal-title">PureNextへようこそ</h2>
+                <div class="form-group"><label class="form-label">氏名</label><input type="text" class="form-input"
+                        id="onboardingName"></div>
+                <div class="form-group"><label class="form-label">住所</label><input type="text" class="form-input"
+                        id="onboardingAddress"></div>
+                <div class="form-group"><label class="form-label">生年月日</label><input type="date" class="form-input"
+                        id="onboardingBirth"></div>
+                <div class="form-group">
+                    <label class="form-label">性別</label>
+                    <select class="form-select" id="onboardingSex">
+                        <option value="未選択">未選択</option>
+                        <option value="男性">男性</option>
+                        <option value="女性">女性</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">身長 (cm)</label><input type="number" class="form-input"
+                        id="onboardingHeight" min="0" max="300"></div>
+                <div class="form-group"><label class="form-label">体重 (kg)</label><input type="number" class="form-input"
+                        id="onboardingWeight" min="0" max="400"></div>
+                <div class="form-group">
+                    <label class="form-label">活動量</label>
+                    <select class="form-select" id="onboardingActivity">
+                        <option value="低め">低め</option>
+                        <option value="ふつう" selected>ふつう</option>
+                        <option value="高め">高め</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="saveOnboardingBtn">保存</button>
+                    <button class="btn btn-secondary" id="skipOnboardingBtn">スキップ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
