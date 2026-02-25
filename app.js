@@ -661,9 +661,7 @@ function applyPowerSaveMode() { const a = document.querySelector('.app'); appSta
 // ===== Filter =====
 function updateFilterDates() {
     const inputLast = document.getElementById('lastReplacementDateInput');
-    const inputNext = document.getElementById('nextReplacementDateInput');
     if (inputLast) inputLast.value = appState.filter.lastReplacementDate;
-    if (inputNext) inputNext.value = appState.filter.nextReplacementDate;
 }
 
 // ===== Profile =====
@@ -928,12 +926,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Init default nextReplacementDate if empty (半年後)
-    if (!appState.filter.nextReplacementDate) {
-        const d = new Date(); d.setMonth(d.getMonth() + 6);
-        appState.filter.nextReplacementDate = d.toISOString().split('T')[0];
-    }
-
     document.getElementById('setTodayFilterBtn')?.addEventListener('click', () => {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('lastReplacementDateInput').value = today;
@@ -942,9 +934,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('lastReplacementDateInput')?.addEventListener('change', function () {
         if (this.value) { appState.filter.lastReplacementDate = this.value; updateFilterDates(); }
-    });
-    document.getElementById('nextReplacementDateInput')?.addEventListener('change', function () {
-        if (this.value) { appState.filter.nextReplacementDate = this.value; updateFilterDates(); }
     });
 
     document.getElementById('openContactModalBtn')?.addEventListener('click', () => {
