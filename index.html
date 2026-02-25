@@ -19,7 +19,7 @@
                 PureNext
             </div>
             <div class="header-center" id="headerCenter">今日はあと2000mlで100%！</div>
-            <button class="notify-toggle" id="notifyToggle">通知</button>
+            <button class="family-badge" id="familyIndicator" data-family="1">👥 家族 1</button>
         </div>
 
         <div class="main-content">
@@ -156,13 +156,7 @@
 
             <!-- ===== RECORDS ===== -->
             <div class="screen" id="recordsScreen">
-                <div class="records-header">
-                    <div class="records-tabs">
-                        <div class="records-tab active" data-tab="daily">日別</div>
-                        <div class="records-tab" data-tab="week">週別</div>
-                        <div class="records-tab" data-tab="month">月別</div>
-                        <div class="records-tab" data-tab="detail">詳細</div>
-                    </div>
+                <div class="records-header" style="justify-content:flex-end;">
                     <button class="share-btn" id="shareRecordsBtn">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path
@@ -172,51 +166,16 @@
                     </button>
                 </div>
 
+                <!-- Water Records -->
                 <div class="records-content">
-                    <div class="tab-content active" id="dailyTab">
-                        <div class="daily-selector">
-                            <button class="period-btn active" data-daily="today">月</button>
-                            <button class="period-btn" data-daily="yesterday">火</button>
-                            <button class="period-btn" data-daily="3daysago">水</button>
-                            <button class="period-btn" data-daily="4daysago">木</button>
-                            <button class="period-btn" data-daily="5daysago">金</button>
-                            <button class="period-btn" data-daily="6daysago">土</button>
-                            <button class="period-btn" data-daily="7daysago">日</button>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="dailyChart" class="chart-canvas"></canvas>
-                        </div>
+                    <div class="milk-tab-header" style="padding:0 20px 10px;">
+                        <h3>💧 水分摂取の記録</h3>
+                        <p class="milk-description" style="margin-bottom:0;">グラフを横にスクロールして過去の記録を確認できます</p>
                     </div>
 
-                    <div class="tab-content" id="weekTab">
-                        <div class="chart-container">
-                            <canvas id="weekChart" class="chart-canvas"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="tab-content" id="monthTab">
-                        <div class="chart-container" style="min-height:260px;">
-                            <canvas id="monthChart" class="chart-canvas"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="tab-content" id="detailTab">
-                        <div class="detail-history-container">
-                            <div class="history-date-selector">
-                                <input type="date" id="historyDate" class="date-input" />
-                                <button class="btn btn-primary" id="loadHistoryBtn"
-                                    style="padding:10px 16px;">表示</button>
-                            </div>
-                            <div class="chart-container" style="margin-bottom:20px; display:none;"
-                                id="detailChartContainer">
-                                <canvas id="detailChart" class="chart-canvas"></canvas>
-                            </div>
-                            <div class="history-content" id="historyContent">
-                                <p style="text-align:center;color:var(--text-muted);padding:30px 0;font-size:13px;">
-                                    日付を選択して記録を表示
-                                </p>
-                            </div>
-                        </div>
+                    <div class="chart-container scrollable-chart-container"
+                        style="margin: 0 20px 20px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding-bottom: 8px;">
+                        <canvas id="dailyChart" class="chart-canvas" style="min-width: 600px; height: 180px;"></canvas>
                     </div>
                 </div>
 
@@ -224,91 +183,46 @@
                 <div class="milk-independent-section">
                     <div class="milk-tab-header">
                         <h3>🍼 赤ちゃん用粉ミルク記録</h3>
-                        <p class="milk-description">赤ちゃんがいつ何ml飲んだかを記録できます</p>
-                    </div>
-                    <div class="records-tabs" style="margin-bottom:15px; background:rgba(255,255,255,0.5);">
-                        <div class="records-tab milk-tab active" data-milk-tab="daily">日別</div>
-                        <div class="records-tab milk-tab" data-milk-tab="week">週別</div>
-                        <div class="records-tab milk-tab" data-milk-tab="month">月別</div>
-                        <div class="records-tab milk-tab" data-milk-tab="detail">詳細</div>
+                        <p class="milk-description">グラフを横にスクロールして過去の記録を確認できます</p>
                     </div>
 
-                    <div class="milk-tab-content active" id="milkDailyTab">
-                        <div class="daily-selector">
-                            <button class="period-btn active" data-milk-daily="today">月</button>
-                            <button class="period-btn" data-milk-daily="yesterday">火</button>
-                            <button class="period-btn" data-milk-daily="3daysago">水</button>
-                            <button class="period-btn" data-milk-daily="4daysago">木</button>
-                            <button class="period-btn" data-milk-daily="5daysago">金</button>
-                            <button class="period-btn" data-milk-daily="6daysago">土</button>
-                            <button class="period-btn" data-milk-daily="7daysago">日</button>
-                        </div>
-                        <div class="chart-container"><canvas id="milkDailyChart" class="chart-canvas"></canvas></div>
-                    </div>
-                    <div class="milk-tab-content" id="milkWeekTab" style="display:none;">
-                        <div class="chart-container"><canvas id="milkWeekChart" class="chart-canvas"></canvas></div>
-                    </div>
-                    <div class="milk-tab-content" id="milkMonthTab" style="display:none;">
-                        <div class="chart-container"><canvas id="milkMonthChart" class="chart-canvas"></canvas></div>
-                    </div>
-                    <div class="milk-tab-content" id="milkDetailTab" style="display:none;">
-                        <div class="detail-history-container">
-                            <div class="history-date-selector">
-                                <input type="date" id="milkHistoryDate" class="date-input" />
-                                <button class="btn btn-primary" id="loadMilkHistoryBtn"
-                                    style="padding:10px 16px;background:var(--accent);color:#fff;border:none;">表示</button>
-                            </div>
-                            <div class="chart-container" style="margin-bottom:20px; display:none;"
-                                id="milkDetailChartContainer">
-                                <canvas id="milkDetailChart" class="chart-canvas"></canvas>
-                            </div>
-                            <div class="history-content" id="milkHistoryContent">
-                                <p style="text-align:center;color:var(--text-muted);padding:30px 0;font-size:13px;">
-                                    日付を選択して記録を表示</p>
-                            </div>
-                        </div>
+                    <div class="chart-container scrollable-chart-container"
+                        style="margin: 0 20px 20px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 2px solid rgba(249, 115, 22, 0.1); padding-bottom: 8px;">
+                        <canvas id="milkDailyChart" class="chart-canvas"
+                            style="min-width: 600px; height: 180px;"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- ===== GOAL ===== -->
-            <div class="screen" id="goalScreen">
-                <div class="goal-container">
-                    <div class="current-goal">
-                        <div class="goal-value" id="currentGoalValue">2000</div>
-                        <div class="goal-label">ml / 日</div>
+            <!-- ===== DEALS (お得) ===== -->
+            <div class="screen" id="dealsScreen">
+                <div class="deals-container">
+                    <h3 class="deals-title" style="margin-bottom:16px;color:var(--primary);">🎁 お得な情報</h3>
+                    <div class="banners-grid" style="display:flex;flex-direction:column;gap:16px;">
+                        <a href="#" class="banner-card"
+                            style="display:block;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);background:#fff;text-decoration:none;">
+                            <img src="banner_yasune.png" alt="yasuneモール" id="bannerYasune"
+                                style="width:100%;height:auto;display:block;aspect-ratio:16/9;object-fit:cover;">
+                        </a>
+                        <a href="#" class="banner-card"
+                            style="display:block;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);background:#fff;text-decoration:none;">
+                            <div id="bannerSim" class="placeholder-img"
+                                style="width:100%;aspect-ratio:16/9;background:linear-gradient(135deg, #fb7185, #f43f5e);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:bold;">
+                                📱 格安SIM</div>
+                        </a>
+                        <a href="#" class="banner-card"
+                            style="display:block;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);background:#fff;text-decoration:none;">
+                            <div id="bannerWimax" class="placeholder-img"
+                                style="width:100%;aspect-ratio:16/9;background:linear-gradient(135deg, #60a5fa, #3b82f6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:bold;">
+                                📶 WiMAX</div>
+                        </a>
+                        <a href="#" class="banner-card"
+                            style="display:block;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);background:#fff;text-decoration:none;">
+                            <div id="bannerCloudWifi" class="placeholder-img"
+                                style="width:100%;aspect-ratio:16/9;background:linear-gradient(135deg, #34d399, #10b981);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:bold;">
+                                ☁️ クラウドWi-Fi</div>
+                        </a>
                     </div>
-                    <div class="goal-controls">
-                        <input type="range" class="goal-slider" id="goalSlider" min="800" max="5000" step="50"
-                            value="2000">
-                        <input type="number" class="goal-input" id="goalInput" min="800" max="5000" value="2000">
-                    </div>
-                    <div class="reference-panel">
-                        <div class="reference-title">参考値：<span id="recommendedGoal">2100</span>ml</div>
-                        <div class="reference-formula">体重×35ml×活動係数</div>
-                        <div class="activity-explanation">
-                            <div class="activity-title">活動係数について</div>
-                            <div class="activity-items">
-                                <div class="activity-item">
-                                    <span class="level-badge low">🛋️ 低め(1.0)</span>
-                                    <span class="level-desc">デスクワーク中心</span>
-                                </div>
-                                <div class="activity-item">
-                                    <span class="level-badge normal">🚶 ふつう(1.1)</span>
-                                    <span class="level-desc">適度な運動・日常活動</span>
-                                </div>
-                                <div class="activity-item">
-                                    <span class="level-badge high">🏃 高め(1.2)</span>
-                                    <span class="level-desc">スポーツ・肉体労働</span>
-                                </div>
-                            </div>
-                            <div class="why-note">活動量が多いほど発汗で水分が失われるため、<br>その分を補給する必要があります。</div>
-                        </div>
-                        <div class="disclaimer">
-                            <p>参考値です。体調や医師の指示を優先してください。</p>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" id="saveGoalBtn" style="width:100%;padding:14px;">目標を保存</button>
                 </div>
             </div>
 
@@ -368,138 +282,103 @@
                 </div>
             </div>
 
-            <!-- ===== CONTRACT ===== -->
-            <div class="screen" id="contractScreen">
-                <div class="info-cards">
-                    <div class="info-card"><span class="card-label">プラン名</span><span class="card-value">PureNext</span>
+            <!-- ===== INFO (情報) ===== -->
+            <div class="screen" id="infoScreen">
+                <div class="info-container">
+                    <!-- Goal Section -->
+                    <div class="info-card-section profile-section" style="margin-bottom:16px;">
+                        <h3>🎯 水分目標</h3>
+                        <div class="gw-card"
+                            style="background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);text-align:center;">
+                            <div class="goal-value" id="currentGoalValue"
+                                style="font-size:28px;color:var(--primary);font-weight:bold;line-height:1;">2000</div>
+                            <div class="goal-label" style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+                                ml / 日</div>
+                            <input type="range" class="goal-slider" id="goalSlider" min="800" max="5000" step="50"
+                                value="2000" style="width:100%;">
+                        </div>
                     </div>
-                    <div class="info-card"><span class="card-label">サーバー機種</span><span class="card-value">PNX-01</span>
+
+                    <!-- Weight Section -->
+                    <div class="info-card-section profile-section" style="margin-bottom:20px;">
+                        <h3>⚖️ 今日の体重</h3>
+                        <div class="gw-card"
+                            style="background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div class="weight-display" id="weightDisplayValue"
+                                style="font-size:24px;color:var(--accent);font-weight:bold;">-- kg</div>
+                            <button class="btn btn-accent" id="openWeightKeypad"
+                                style="padding:10px 20px;font-size:14px;">記録する</button>
+                        </div>
+                        <div class="weight-chart"
+                            style="background:#fff;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <canvas id="weightChartCanvas" style="width:100%;height:150px;"></canvas>
+                        </div>
                     </div>
-                    <div class="info-card"><span class="card-label">契約ID</span><span class="card-value">PN-123456</span>
+
+                    <!-- Profile Section -->
+                    <div class="info-card-section profile-section" style="margin-bottom:20px;">
+                        <h3>👤 登録情報
+                            <button class="btn btn-secondary btn-sm" id="editProfileBtn"
+                                style="float:right;font-size:11px;padding:4px 10px;">修正する</button>
+                        </h3>
+                        <div class="profile-preview info-cards"
+                            style="padding:0;background:transparent;box-shadow:none;">
+                            <div class="info-card" style="margin-bottom:4px;padding:8px 12px;"><span
+                                    class="card-label">氏名</span><span class="card-value" id="previewName">未登録</span>
+                            </div>
+                            <div class="info-card" style="margin-bottom:4px;padding:8px 12px;"><span
+                                    class="card-label">住所</span><span class="card-value" id="previewAddress">未登録</span>
+                            </div>
+                            <div class="info-card" style="margin-bottom:4px;padding:8px 12px;"><span
+                                    class="card-label">生年月日</span><span class="card-value" id="previewBirth">未登録</span>
+                            </div>
+                            <div class="info-card" style="margin-bottom:4px;padding:8px 12px;"><span
+                                    class="card-label">性別</span><span class="card-value" id="previewSex">未選択</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-card"><span class="card-label">次回配送</span><span
-                            class="card-value">2025-09-15</span></div>
-                    <div class="info-card"><span class="card-label">お届け先</span><span class="card-value">登録住所</span>
-                    </div>
-                </div>
-                <div class="filter-section">
-                    <h3>フィルター交換情報</h3>
-                    <div class="info-cards" style="padding:0;">
-                        <div class="info-card"><span class="card-label">型番</span><span class="card-value"
-                                id="filterModel">PureNext Filter PRO</span></div>
-                        <div class="info-card"><span class="card-label">最終交換日</span><span class="card-value"
-                                id="lastReplacementDate">2024-09-01</span></div>
-                        <div class="info-card"><span class="card-label">次回交換予定</span><span class="card-value"
-                                id="nextReplacementDate">2025-03-01</span></div>
-                    </div>
-                    <div class="filter-purchase">
-                        <div class="filter-buttons">
-                            <button class="filter-action-btn" id="filterPurchaseBtn">
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+
+                    <!-- Filter Section -->
+                    <div class="info-card-section profile-section" style="margin-bottom:20px;">
+                        <h3>🔄 フィルター交換</h3>
+                        <div class="filter-inputs"
+                            style="background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">最終交換日</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="date" class="form-input" id="lastReplacementDateInput">
+                                    <button class="btn btn-secondary" id="setTodayFilterBtn"
+                                        style="white-space:nowrap;padding:0 16px;">今日</button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:12px;">
+                                <label class="form-label">次回交換予定</label>
+                                <input type="date" class="form-input" id="nextReplacementDateInput">
+                            </div>
+                            <button class="btn btn-primary" id="filterPurchaseBtn"
+                                style="width:100%;margin-top:8px;padding:16px;font-size:15px;font-weight:bold;">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"
+                                    style="width:18px;height:18px;margin-right:8px;vertical-align:middle;display:inline-block;">
                                     <path
                                         d="M19,7H15V6A3,3 0 0,0 12,3A3,3 0 0,0 9,6V7H5A1,1 0 0,0 4,8V19A3,3 0 0,0 7,22H17A3,3 0 0,0 20,19V8A1,1 0 0,0 19,7M11,6A1,1 0 0,1 12,5A1,1 0 0,1 13,6V7H11V6Z" />
                                 </svg>
                                 フィルターを購入する
                             </button>
-                            <button class="filter-action-btn" id="repairRequestBtn">
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M22.7,19L13.6,9.9C14.5,7.6 14,4.9 12.1,3C10.1,1 7.1,0.6 4.7,1.7L9,6L6,9L1.6,4.7C0.4,7.1 0.9,10.1 2.9,12.1C4.8,14 7.5,14.5 9.8,13.6L18.9,22.7C19.3,23.1 19.9,23.1 20.3,22.7L22.6,20.4C23.1,20 23.1,19.3 22.7,19Z" />
-                                </svg>
-                                修理を依頼する
-                            </button>
-                        </div>
-                        <p class="filter-note">6ヶ月に1度の交換をおすすめします</p>
-                    </div>
-                </div>
-                <div class="contract-section">
-                    <h3>サポート・紹介</h3>
-                    <div class="support-buttons">
-                        <button class="btn btn-info" id="contractContactBtn"
-                            style="display:flex;align-items:center;justify-content:center;gap:6px;">
-                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z" />
-                            </svg>
-                            問い合わせ
-                        </button>
-                        <button class="btn btn-success" id="contractInviteBtn"
-                            style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;">
-                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M17,13H13V17H11V13H7V11H11V7H13V11H17V13Z" />
-                            </svg>
-                            友達に紹介
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PROFILE / REGISTRATION ===== -->
-            <div class="screen" id="profileScreen">
-                <div class="profile-form">
-                    <div class="form-group"><label class="form-label">氏名</label><input type="text" class="form-input"
-                            id="profileName"></div>
-                    <div class="form-group"><label class="form-label">住所</label><input type="text" class="form-input"
-                            id="profileAddress"></div>
-                    <div class="form-group"><label class="form-label">生年月日</label><input type="date" class="form-input"
-                            id="profileBirth"></div>
-                    <div class="form-group">
-                        <label class="form-label">性別</label>
-                        <select class="form-select" id="profileSex">
-                            <option value="未選択">未選択</option>
-                            <option value="男性">男性</option>
-                            <option value="女性">女性</option>
-                            <option value="その他">その他</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label class="form-label">身長 (cm)</label><input type="number"
-                            class="form-input" id="profileHeight" min="0" max="300"></div>
-                    <div class="form-group"><label class="form-label">体重 (kg)</label><input type="number"
-                            class="form-input" id="profileWeight" min="0" max="400"></div>
-                    <div class="form-group">
-                        <label class="form-label">活動量</label>
-                        <select class="form-select" id="profileActivity">
-                            <option value="低め">低め</option>
-                            <option value="ふつう" selected>ふつう</option>
-                            <option value="高め">高め</option>
-                        </select>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" id="saveProfileBtn">保存</button>
-                        <button class="btn btn-secondary" id="recalcBtn">推奨量を再計算</button>
-                    </div>
-
-                    <!-- Weight Management -->
-                    <div class="profile-section">
-                        <h3>体重管理</h3>
-                        <div class="weight-management">
-                            <div class="form-group">
-                                <label class="form-label">今日の体重 (kg)</label>
-                                <div style="display:flex;gap:8px;align-items:center;">
-                                    <div style="flex:1;font-size:20px;font-weight:700;color:var(--primary);"
-                                        id="weightDisplayValue">-- kg</div>
-                                    <button class="btn btn-accent" id="openWeightKeypad"
-                                        style="padding:10px 20px;">記録</button>
-                                </div>
-                            </div>
-                            <div class="weight-chart">
-                                <canvas id="weightChartCanvas" style="width:100%;height:200px;"></canvas>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Group Sharing -->
-                    <div class="profile-section">
-                        <h3>👥 グループ共有設定</h3>
-                        <div class="group-settings">
-                            <div class="form-group">
-                                <label class="form-label">
+                    <!-- Support and Group -->
+                    <div class="info-card-section profile-section" style="margin-bottom:20px;">
+                        <h3>⚙️ グループ設定</h3>
+                        <div class="group-settings"
+                            style="background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" style="margin-bottom:0;">
                                     <input type="checkbox" id="enableGroupSharing" style="margin-right:6px;">
                                     記録をグループで共有する
                                 </label>
                             </div>
-                            <div class="form-group hidden" id="groupIdSection">
+                            <div class="form-group hidden" id="groupIdSection" style="margin-top:12px;">
                                 <label class="form-label">グループID</label>
                                 <div style="display:flex;gap:6px;">
                                     <input type="text" class="form-input" id="groupId" placeholder="グループIDを入力" readonly>
@@ -508,7 +387,7 @@
                                 </div>
                                 <div id="qrCodeArea"></div>
                             </div>
-                            <div class="form-group hidden" id="joinGroupSection">
+                            <div class="form-group hidden" id="joinGroupSection" style="margin-top:12px;">
                                 <label class="form-label">他のグループに参加</label>
                                 <div style="display:flex;gap:6px;">
                                     <input type="text" class="form-input" id="joinGroupId" placeholder="相手のグループIDを入力">
@@ -516,13 +395,29 @@
                                         style="padding:8px 14px;white-space:nowrap;">参加</button>
                                 </div>
                             </div>
-                            <div class="form-group hidden" id="groupMembersSection">
+                            <div class="form-group hidden" id="groupMembersSection" style="margin-top:12px;">
                                 <label class="form-label">グループメンバー</label>
                                 <div class="group-members" id="groupMembersList">
                                     <p style="color:var(--text-muted);font-size:12px;">メンバーなし</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Independent Menu Section -->
+                    <div class="info-card-section menu-section" style="margin-bottom:20px;">
+                        <h3 style="margin-bottom:12px;">🤝 友達に紹介</h3>
+                        <button class="btn btn-success" id="contractInviteBtn"
+                            style="width:100%;padding:16px;font-size:15px;font-weight:bold;margin-bottom:20px;">
+                            <span style="font-size:18px;margin-right:8px;vertical-align:middle;">🎁</span>
+                            友達を招待してお得な特典をゲット
+                        </button>
+
+                        <h3 style="margin-bottom:12px;">📞 サポート</h3>
+                        <button class="btn btn-secondary" id="openContactModalBtn"
+                            style="width:100%;padding:16px;font-size:15px;font-weight:bold;background:#fff;border:1px solid var(--border);color:var(--text);">
+                            <span style="font-size:18px;margin-right:8px;vertical-align:middle;">❓</span> よくある質問・お問い合わせ
+                        </button>
                     </div>
                 </div>
             </div>
@@ -582,14 +477,6 @@
                 <span class="tab-label">記録</span>
                 <div class="tab-dot"></div>
             </div>
-            <div class="tab-item" data-screen="goal">
-                <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" />
-                </svg>
-                <span class="tab-label">目標</span>
-                <div class="tab-dot"></div>
-            </div>
             <div class="tab-item" data-screen="powerSave">
                 <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
@@ -598,20 +485,20 @@
                 <span class="tab-label">節電</span>
                 <div class="tab-dot"></div>
             </div>
-            <div class="tab-item" data-screen="contract">
+            <div class="tab-item" data-screen="info">
                 <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
-                        d="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V5H19V19Z" />
+                        d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A2,2 0 0,1 10,15A2,2 0 0,1 12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17M12,11A2,2 0 0,1 10,9A2,2 0 0,1 12,7A2,2 0 0,1 14,9A2,2 0 0,1 12,11Z" />
                 </svg>
-                <span class="tab-label">契約</span>
+                <span class="tab-label">情報</span>
                 <div class="tab-dot"></div>
             </div>
-            <div class="tab-item" data-screen="profile">
+            <div class="tab-item" data-screen="deals">
                 <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
-                        d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                        d="M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V15H11V17M11,13H13V7H11V13Z" />
                 </svg>
-                <span class="tab-label">登録</span>
+                <span class="tab-label">お得</span>
                 <div class="tab-dot"></div>
             </div>
             <div class="tab-item" data-screen="column">
@@ -624,31 +511,163 @@
             </div>
         </div>
 
-        <!-- ===== Onboarding Modal ===== -->
-        <div class="modal hidden" id="onboardingModal">
-            <div class="modal-content">
-                <h2 class="modal-title">PureNextへようこそ</h2>
-                <div class="form-group"><label class="form-label">氏名</label><input type="text" class="form-input"
-                        id="onboardingName"></div>
-                <div class="form-group"><label class="form-label">住所</label><input type="text" class="form-input"
-                        id="onboardingAddress"></div>
-                <div class="form-group"><label class="form-label">生年月日</label><input type="date" class="form-input"
-                        id="onboardingBirth"></div>
+        <!-- ===== MODALS ===== -->
+
+        <!-- Profile Edit Modal -->
+        <div class="modal hidden" id="profileEditModal">
+            <div class="modal-content" style="max-height:90vh;overflow-y:auto;">
+                <h3 style="margin-bottom:16px;">登録情報の修正</h3>
+                <div class="form-group"><label class="form-label">氏名 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label><input type="text"
+                        class="form-input" id="editProfileName"></div>
+                <div class="form-group"><label class="form-label">住所 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label><input type="text"
+                        class="form-input" id="editProfileAddress"></div>
+                <div class="form-group"><label class="form-label">生年月日 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label><input type="date"
+                        class="form-input" id="editProfileBirth"></div>
                 <div class="form-group">
-                    <label class="form-label">性別</label>
-                    <select class="form-select" id="onboardingSex">
+                    <label class="form-label">性別 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label>
+                    <select class="form-select" id="editProfileSex">
                         <option value="未選択">未選択</option>
                         <option value="男性">男性</option>
                         <option value="女性">女性</option>
                         <option value="その他">その他</option>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">身長 (cm)</label><input type="number" class="form-input"
-                        id="onboardingHeight" min="0" max="300"></div>
-                <div class="form-group"><label class="form-label">体重 (kg)</label><input type="number" class="form-input"
-                        id="onboardingWeight" min="0" max="400"></div>
+                <div class="form-group"><label class="form-label">身長 (cm) <span class="opt"
+                            style="color:#94a3b8;font-size:11px;">*任意</span></label><input type="number"
+                        class="form-input" id="editProfileHeight" min="0" max="300"></div>
+                <!-- 体重と活動量も -->
+                <div class="form-group"><label class="form-label">体重 (kg) <span class="opt"
+                            style="color:#94a3b8;font-size:11px;">*任意</span></label><input type="number"
+                        class="form-input" id="editProfileWeight" min="0" max="400"></div>
                 <div class="form-group">
-                    <label class="form-label">活動量</label>
+                    <label class="form-label">活動量 <span class="opt"
+                            style="color:#94a3b8;font-size:11px;">*任意</span></label>
+                    <select class="form-select" id="editProfileActivity">
+                        <option value="低め">低め</option>
+                        <option value="ふつう" selected>ふつう</option>
+                        <option value="高め">高め</option>
+                    </select>
+                </div>
+                <div class="modal-buttons" style="display:flex;gap:12px;margin-top:20px;">
+                    <button class="btn btn-secondary" id="closeProfileEditBtn" style="flex:1;">キャンセル</button>
+                    <button class="btn btn-primary" id="saveProfileEditBtn" style="flex:1;">保存する</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Options Modal -->
+        <div class="modal hidden" id="contactOptionsModal">
+            <div class="modal-content">
+                <h3 style="margin-bottom:16px;">お問い合わせ</h3>
+                <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;">お問い合わせの前に、よくある質問（FAQ）をご確認ください。</p>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <button class="btn btn-primary" id="openFaqBtn" style="padding:14px;font-size:16px;">FAQを見る</button>
+                    <button class="btn btn-secondary" id="openInquiryBtn"
+                        style="padding:14px;font-size:16px;">直接お問い合わせする</button>
+                </div>
+                <div class="modal-buttons" style="margin-top:20px;">
+                    <button class="btn" id="closeContactModalBtn"
+                        style="width:100%;color:var(--text-muted);background:#f1f5f9;">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server Connection Modal -->
+        <div class="modal hidden" id="serverConnectionModal">
+            <div class="modal-content">
+                <h3 style="margin-bottom:16px;text-align:center;">ウォーターサーバー接続</h3>
+
+                <!-- 接続中状態 -->
+                <div id="serverConnectedState">
+                    <p style="text-align:center;color:var(--success);font-weight:bold;margin-bottom:12px;">現在接続中</p>
+                    <p style="text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:24px;">接続先: <span
+                            id="currentConnectionName">家族 1</span></p>
+                    <button class="btn btn-danger" id="disconnectServerBtn"
+                        style="width:100%;padding:14px;font-size:15px;margin-bottom:12px;">接続を解除する</button>
+                </div>
+
+                <!-- 未接続状態 -->
+                <div id="serverDisconnectedState" class="hidden">
+                    <p style="text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:20px;">
+                        サーバー番号を選択して接続してください。</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+                        <button class="btn btn-secondary connect-server-btn" data-server="1" style="padding:16px;">家族
+                            1</button>
+                        <button class="btn btn-secondary connect-server-btn" data-server="2" style="padding:16px;">家族
+                            2</button>
+                        <button class="btn btn-secondary connect-server-btn" data-server="3" style="padding:16px;">家族
+                            3</button>
+                        <button class="btn btn-secondary connect-server-btn" data-server="4" style="padding:16px;">家族
+                            4</button>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="btn" id="closeServerConnectionModalBtn"
+                        style="width:100%;color:var(--text-muted);background:#f1f5f9;margin-top:12px;">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Layout Modal (詳細内訳モーダル) -->
+        <div class="modal hidden" id="detailHistoryModal">
+            <div class="modal-content" style="max-height:85vh;overflow-y:auto;padding:0;background:#f8fafc;">
+                <div
+                    style="position:sticky;top:0;background:var(--surface);z-index:10;padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                    <h3 style="margin:0;font-size:16px;color:var(--text);" id="detailModalTitle">日付の記録</h3>
+                    <button id="closeDetailModalBtn"
+                        style="background:none;border:none;font-size:24px;line-height:1;color:var(--text-muted);cursor:pointer;padding:0 8px;">&times;</button>
+                </div>
+                <div style="padding:20px;">
+                    <div class="chart-container"
+                        style="margin-bottom:20px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:none;padding:16px;"
+                        id="modalDetailChartContainer">
+                        <canvas id="modalDetailChart" class="chart-canvas" style="height:140px;"></canvas>
+                    </div>
+                    <div class="history-content" id="modalHistoryContent"
+                        style="background:transparent;padding:0;border:none;box-shadow:none;">
+                        <!-- ここにリスト表示が入る -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Onboarding Modal ===== -->
+        <div class="modal hidden" id="onboardingModal">
+            <div class="modal-content">
+                <h2 class="modal-title">PureNextへようこそ</h2>
+                <div class="form-group"><label class="form-label">氏名 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label><input type="text"
+                        class="form-input" id="onboardingName" required></div>
+                <div class="form-group"><label class="form-label">住所 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label><input type="text"
+                        class="form-input" id="onboardingAddress" required></div>
+                <div class="form-group"><label class="form-label">生年月日 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label><input type="date"
+                        class="form-input" id="onboardingBirth" required></div>
+                <div class="form-group">
+                    <label class="form-label">性別 <span class="req"
+                            style="color:#ef4444;font-size:11px;">*必須</span></label>
+                    <select class="form-select" id="onboardingSex" required>
+                        <option value="未選択">未選択</option>
+                        <option value="男性">男性</option>
+                        <option value="女性">女性</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">身長 (cm) <span class="opt"
+                            style="color:#94a3b8;font-size:11px;">*任意</span></label><input type="number"
+                        class="form-input" id="onboardingHeight" min="0" max="300"></div>
+                <div class="form-group"><label class="form-label">体重 (kg) <span class="opt"
+                            style="color:#94a3b8;font-size:11px;">*任意</span></label><input type="number"
+                        class="form-input" id="onboardingWeight" min="0" max="400"></div>
+                <div class="form-group">
+                    <label class="form-label">活動量 <span class="opt"
+                            style="color:#94a3b8;font-size:11px;">*任意</span></label>
                     <select class="form-select" id="onboardingActivity">
                         <option value="低め">低め</option>
                         <option value="ふつう" selected>ふつう</option>

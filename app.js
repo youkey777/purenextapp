@@ -259,26 +259,30 @@ function addPreset(ml) {
 // ===== Screen Navigation =====
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const screen = document.getElementById(id + 'Screen') || document.getElementById(id + 'Screen');
+    let targetId = id;
+    if (id === 'profile' || id === 'contract' || id === 'goal') targetId = 'info';
+
+    const screen = document.getElementById(targetId + 'Screen');
     if (screen) screen.classList.add('active');
+
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-    const tab = document.querySelector(`[data-screen="${id}"]`);
+    let tabId = id;
+    if (id === 'profile' || id === 'contract' || id === 'goal') tabId = 'info';
+
+    const tab = document.querySelector(`[data-screen="${tabId}"]`);
     if (tab) tab.classList.add('active');
-    if (id === 'records') { updateRecordsContent(getCurrentTab()); updateMilkRecords(); }
-    if (id === 'goal') updateGoalDisplay();
-    if (id === 'profile') { loadProfileToForm(false); updateWeightChart(); }
-    if (id === 'powerSave') updatePowerSaveUI();
-    if (id === 'contract') updateFilterDates();
-    if (id === 'column') renderColumnCards();
+
+    if (targetId === 'records') { updateRecordsContent(); updateMilkRecords(); }
+    if (targetId === 'info') { updateGoalDisplay(); loadProfileToForm(false); updateWeightChart(); updateFilterDates(); }
+    if (targetId === 'powerSave') updatePowerSaveUI();
+    if (targetId === 'column') renderColumnCards();
 }
 
 function getCurrentTab() { const t = document.querySelector('.records-tab.active'); return t ? t.dataset.tab : 'daily'; }
 
-// ===== Records =====
-function updateRecordsContent(tab) {
-    if (tab === 'daily') setTimeout(() => updateDailyRecords(), 50);
-    else if (tab === 'week') setTimeout(() => updateWeekRecords(), 100);
-    else if (tab === 'month') setTimeout(() => updateMonthRecords(), 100);
+// ===== Records (Single Scrollable Chart) =====
+function updateRecordsContent() {
+    setTimeout(() => updateDailyRecords(), 50);
 }
 
 // Random data generation
@@ -306,25 +310,157 @@ const globalDayPatterns = {};
 
 function updateDailyRecords() {
     const canvas = document.getElementById('dailyChart');
-    const sel = document.querySelector('#dailyTab .daily-selector .period-btn.active')?.dataset.daily || 'today';
-    const slots = Array.from({ length: 24 }, (_, i) => ({ hour: i, ml: 0, hasData: false, isDummy: false }));
-    if (sel === 'today') {
-        appState.today.history.forEach(e => { const h = parseInt(e.time.split(':')[0]); if (h >= 0 && h < 24) { slots[h].ml += e.ml; slots[h].hasData = true; } });
-        const ch = new Date().getHours();
-        for (let h = 6; h < ch; h++) {
-            if (slots[h] && !slots[h].hasData && todayDummyData[h]) {
-                slots[h].ml = todayDummyData[h];
-                slots[h].hasData = true; slots[h].isDummy = true;
+    if (!canvas) return;
+
+    // Generate 30 days of water data
+    const data = [];
+    const today = new Date();
+
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+
+        // 実際のアプリではここで過去の保存データを取得する想定
+        // 今回はサンプルデータとして現在以外はダミー値を入れる
+        let val = 0;
+        let isDummy = true;
+
+        if (i === 0) {
+            // 今日
+            val = Math.round(appState.today.totalMl);
+            isDummy = val === 0; // 今日全く飲んでいなければダミー扱いにするなどの処理も可能
+        } else {
+            // 過去日（ダミー生成）
+            const seed = i * 12345;
+            val = Math.floor(seededRandom(seed) * 1500) + 500; // 500〜2000mlのランダム
+        }
+
+        data.push({
+            label: dateStr,
+            value: val,
+            isDummy: isDummy,
+            dateObj: d,
+            isMilk: false
+        });
+    }
+
+    // キャンバスの幅をデータ数に応じて調整（横スクロール用）
+    const barWidthWithSpacing = 40;
+    canvas.style.minWidth = `${Math.max(600, data.length * barWidthWithSpacing)}px`;
+
+    // スクロール可能なグラフを描画
+    drawScrollableBarChart(canvas, data, d => d.label, d => d.value, 'ml', 'blue');
+
+    // 初期表示時に右端（最新日）にスクロールさせる
+    setTimeout(() => {
+        const container = canvas.closest('.scrollable-chart-container');
+        if (container) container.scrollLeft = container.scrollWidth;
+    }, 50);
+}
+
+function drawScrollableBarChart(canvas, data, labelFn, valFn, unit, colorTheme = 'blue') {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) { setTimeout(() => drawScrollableBarChart(canvas, data, labelFn, valFn, unit, colorTheme), 200); return; }
+
+    // 既存のクリックイベントリスナーを削除するために要素をリプレイスする
+    const newCanvas = canvas.cloneNode(true);
+    canvas.parentNode.replaceChild(newCanvas, canvas);
+    canvas = newCanvas;
+
+    const ctx = canvas.getContext('2d');
+    const displayWidth = canvas.offsetWidth;
+    const displayHeight = canvas.offsetHeight || 180;
+
+    // 高解像度ディスプレイ対応
+    canvas.width = displayWidth * 2;
+    canvas.height = displayHeight * 2;
+    ctx.scale(2, 2);
+
+    const w = displayWidth, h = displayHeight, p = 30, pb = 40; // pb=padding-bottom
+    const cw = w - p * 2, ch = h - p - pb;
+    ctx.clearRect(0, 0, w, h);
+
+    if (!data.length) { ctx.fillStyle = '#94a3b8'; ctx.font = '13px Inter,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('データがありません', w / 2, h / 2); return; }
+
+    const max = Math.max(...data.map(valFn), 100);
+    const sp = cw / Math.max(10, data.length); // データ間隔
+    const bw = Math.min(sp * 0.6, 20); // 棒の幅
+
+    // 背景グリッドライン
+    ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p, p); ctx.lineTo(p, h - pb); ctx.lineTo(w - p, h - pb); ctx.stroke();
+
+    // 棒とラベルの描画領域（クリック判定用）
+    const clickAreas = [];
+
+    data.forEach((d, i) => {
+        const x = p + (i + 0.5) * sp;
+        const v = valFn(d);
+        const bh = (v / max) * ch;
+        const y = h - pb - bh;
+
+        ctx.fillStyle = colorTheme === 'orange' ? '#fb923c' : '#38bdf8';
+        if (d.isDummy) {
+            ctx.fillStyle = colorTheme === 'orange' ? 'rgba(249,115,22,.4)' : 'rgba(14,165,233,.4)';
+        }
+
+        // 棒描画
+        ctx.beginPath(); ctx.roundRect(x - bw / 2, y, bw, bh, [4, 4, 0, 0]); ctx.fill();
+
+        // 値テキスト
+        ctx.fillStyle = d.isDummy ? '#94a3b8' : (colorTheme === 'orange' ? '#ea580c' : '#0284c7');
+        ctx.font = 'bold 9px Inter,sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(v > 0 ? v : '', x, y - 4);
+
+        // ラベル（日付）
+        ctx.fillStyle = '#64748b'; ctx.font = '9px Inter,sans-serif';
+        ctx.fillText(labelFn(d), x, h - pb + 14);
+
+        // クリック判定エリアを保存
+        clickAreas.push({
+            xMin: x - sp / 2, xMax: x + sp / 2, yMin: p, yMax: h,
+            data: d
+        });
+    });
+
+    if (data.some(d => d.isDummy)) {
+        ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter,sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText('※ サンプルデータが含まれます', p, 16);
+    }
+
+    // クリックおよびホバーイベントの追加
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        let isHover = false;
+        for (const area of clickAreas) {
+            if (clickX >= area.xMin && clickX <= area.xMax && clickY >= area.yMin && clickY <= area.yMax) {
+                isHover = true; break;
             }
         }
-    } else {
-        const p = globalDayPatterns[sel] || globalDayPatterns.today;
-        p.hours.forEach((h, i) => { if (h < 24) { slots[h].ml = p.amounts[i]; slots[h].hasData = true; slots[h].isDummy = true; } });
-    }
-    drawBarChart(canvas, slots.filter(s => s.hasData), s => `${s.hour}:00`, s => s.ml, 'ml');
+        canvas.style.cursor = isHover ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('mouseleave', () => { canvas.style.cursor = 'default'; });
+
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        for (const area of clickAreas) {
+            if (clickX >= area.xMin && clickX <= area.xMax && clickY >= area.yMin && clickY <= area.yMax) {
+                showDetailHistoryModal(area.data);
+                break;
+            }
+        }
+    });
 }
 
 function drawBarChart(canvas, data, labelFn, valFn, unit, colorTheme = 'blue') {
+    // 古いdrawBarChartは「今日の記録(todayChart)」のみに使用されるため残す
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     if (rect.width === 0) { setTimeout(() => drawBarChart(canvas, data, labelFn, valFn, unit, colorTheme), 200); return; }
@@ -358,53 +494,12 @@ function drawBarChart(canvas, data, labelFn, valFn, unit, colorTheme = 'blue') {
     if (data.some(d => d.isDummy)) { ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('※ サンプルデータ', w / 2, 18); }
 }
 
-// Week chart
-function updateWeekRecords() {
-    const canvas = document.getElementById('weekChart');
-    const data = generateAllWeeksData();
-    drawBarChart(canvas, data, d => d.label, d => d.value, 'ml');
-}
-function generateAllWeeksData() {
-    const data = [], today = new Date();
-    for (let wo = 3; wo >= 0; wo--) {
-        const ws = new Date(today); ws.setDate(today.getDate() - (wo * 7) - today.getDay());
-        const we = new Date(ws); we.setDate(ws.getDate() + 6);
-        const label = `${ws.getMonth() + 1}/${ws.getDate()}-${we.getMonth() + 1}/${we.getDate()}`;
-        let val;
-        if (wo === 0) val = Math.round(appState.today.totalMl || 2000);
-        else { const sv = wo * 12345; val = Math.round(2000 + (Math.sin(wo * 2.5) * 150) + (seededRandom(sv) * 150 - 75)); }
-        data.push({ label, value: val, isDummy: wo > 0 });
-    }
-    return data;
-}
-
-// Month chart (FIXED: bar chart with month labels)
-function updateMonthRecords() {
-    const canvas = document.getElementById('monthChart');
-    const data = generateAllMonthsData();
-    drawBarChart(canvas, data, d => d.label, d => d.value, 'ml');
-}
-function generateAllMonthsData() {
-    const data = [], today = new Date(), cm = today.getMonth();
-    const baselines = {};
-    for (let i = 5; i >= 0; i--) {
-        let m = cm - i; let y = today.getFullYear();
-        if (m < 0) { m += 12; y--; }
-        const mName = `${m + 1}月`;
-        const isCurrent = i === 0;
-        let val;
-        if (isCurrent) val = Math.round(appState.today.totalMl || 2000);
-        else { const base = 1800 + Math.round(Math.sin(m * .8) * 200); const sv = m * 54321; val = Math.round(base + (seededRandom(sv) * 200 - 100)); }
-        val = Math.max(1200, Math.min(2800, val));
-        data.push({ label: mName, value: val, isDummy: !isCurrent });
-    }
-    return data;
-}
+// (Removed generateAllWeeksData and generateAllMonthsData as they are no longer used by the UI)
 
 // Milk chart
 function generateMilkDataForDay(dk) {
     const seeds = { today: 12345, yesterday: 23456, '3daysago': 34567, '4daysago': 45678, '5daysago': 56789, '6daysago': 67890, '7daysago': 78901 };
-    const s = seeds[dk] || 12345; const times = [], amounts = [];
+    const s = seeds[dk] || (dk * 12345); const times = [], amounts = [];
     const n = Math.floor(seededRandom(s * 7) * 3) + 5;
     const ph = [6, 8, 10, 12, 14, 16, 18, 20, 22];
     for (let i = 0; i < n && i < ph.length; i++) {
@@ -412,35 +507,42 @@ function generateMilkDataForDay(dk) {
         times.push(`${String(ph[i]).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
         amounts.push(Math.floor(seededRandom(s * 43 + i * 29) * 100) + 100);
     }
-    return { times, amounts };
+    return { times, amounts, total: amounts.reduce((a, b) => a + b, 0) };
 }
-const globalMilkPatterns = {};
-['today', 'yesterday', '3daysago', '4daysago', '5daysago', '6daysago', '7daysago'].forEach(k => globalMilkPatterns[k] = generateMilkDataForDay(k));
 
 function updateMilkRecords() {
-    const activeTab = document.querySelector('.milk-tab.active')?.dataset.milkTab || 'daily';
-    document.querySelectorAll('.milk-tab-content').forEach(c => c.style.display = 'none');
+    const canvas = document.getElementById('milkDailyChart');
+    if (!canvas) return;
 
-    if (activeTab === 'daily') {
-        document.getElementById('milkDailyTab').style.display = 'block';
-        const canvas = document.getElementById('milkDailyChart');
-        const sel = document.querySelector('.milk-independent-section .period-btn.active')?.dataset.milkDaily || 'today';
-        const p = globalMilkPatterns[sel] || globalMilkPatterns.today;
-        const data = p.times.map((t, i) => ({ label: t, value: p.amounts[i], isDummy: true }));
-        if (canvas) drawBarChart(canvas, data, d => d.label, d => d.value, 'ml', 'orange');
-    } else if (activeTab === 'week') {
-        document.getElementById('milkWeekTab').style.display = 'block';
-        const canvas = document.getElementById('milkWeekChart');
-        const data = generateAllWeeksData().map(d => ({ ...d, value: Math.max(100, d.value - 800) }));
-        if (canvas) drawBarChart(canvas, data, d => d.label, d => d.value, 'ml', 'orange');
-    } else if (activeTab === 'month') {
-        document.getElementById('milkMonthTab').style.display = 'block';
-        const canvas = document.getElementById('milkMonthChart');
-        const data = generateAllMonthsData().map(d => ({ ...d, value: Math.max(200, d.value - 1200) }));
-        if (canvas) drawBarChart(canvas, data, d => d.label, d => d.value, 'ml', 'orange');
-    } else if (activeTab === 'detail') {
-        document.getElementById('milkDetailTab').style.display = 'block';
+    // Generate 30 days of milk data
+    const data = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+
+        let val;
+        let isDummy = true;
+
+        if (i === 0) {
+            // 今日（ダミーデータを使用）
+            const dk = 'today';
+            const sd = generateMilkDataForDay(dk);
+            val = sd.total;
+        } else {
+            const sd = generateMilkDataForDay(i);
+            val = sd.total;
+        }
+
+        data.push({ label: dateStr, value: val, isDummy, dateObj: d, isMilk: true });
     }
+
+    // キャンバスの幅をデータ数に応じて調整（横スクロール用）
+    const barWidthWithSpacing = 40;
+    canvas.style.minWidth = `${Math.max(600, data.length * barWidthWithSpacing)}px`;
+
+    drawScrollableBarChart(canvas, data, d => d.label, d => d.value, 'ml', 'orange');
 }
 
 // Today chart
@@ -448,51 +550,73 @@ function updateTodayChart() {
     const canvas = document.getElementById('todayChart'); if (!canvas) return;
     const slots = Array.from({ length: 24 }, (_, i) => ({ hour: i, ml: 0, hasData: false, isDummy: false }));
     appState.today.history.forEach(e => { const h = parseInt(e.time.split(':')[0]); if (h >= 0 && h < 24) { slots[h].ml += e.ml; slots[h].hasData = true; } });
-    const ch = new Date().getHours();
-    for (let h = 6; h < ch; h++) {
-        if (slots[h] && !slots[h].hasData && todayDummyData[h]) {
-            slots[h].ml = todayDummyData[h];
-            slots[h].hasData = true; slots[h].isDummy = true;
-        }
-    }
     const active = slots.filter(s => s.hasData);
     drawBarChart(canvas, active, s => `${s.hour}:00`, s => s.ml, 'ml');
 }
 
-// Detail history with random data
-function loadDetailHistory(date, isMilk = false) {
-    const elId = isMilk ? 'milkHistoryContent' : 'historyContent';
-    const canvasId = isMilk ? 'milkDetailChart' : 'detailChart';
-    const containerId = isMilk ? 'milkDetailChartContainer' : 'detailChartContainer';
+// Details History Modal (タップ表示用)
+function showDetailHistoryModal(dayData) {
+    if (!dayData) return;
+    const isMilk = dayData.isMilk;
     const colorTheme = isMilk ? 'orange' : 'blue';
-    const el = document.getElementById(elId);
+    const dateStr = dayData.dateObj.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' });
 
-    const d = new Date(date); const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-    const numEntries = Math.floor(seededRandom(seed * 7) * 5) + 4;
+    document.getElementById('detailModalTitle').textContent = `${dateStr} の記録`;
+    const targetDate = dayData.dateObj.toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // ダミー内訳データ生成
+    const seed = dayData.dateObj.getFullYear() * 10000 + (dayData.dateObj.getMonth() + 1) * 100 + dayData.dateObj.getDate();
     const entries = [];
-    for (let i = 0; i < numEntries; i++) {
-        const h = Math.floor(seededRandom(seed * 11 + i * 37) * 16) + 6;
-        const m = Math.floor(seededRandom(seed * 13 + i * 41) * 60);
-        const ml = Math.floor(seededRandom(seed * 17 + i * 53) * 490) + 10;
-        entries.push({ time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, ml, type: isMilk ? 'ミルク' : '水分' });
+
+    // 今日の場合は実際の履歴を使う（水分のみ。ミルクはアプリのstateにまだ完全実装していないためダミー）
+    if (targetDate === todayStr && !isMilk) {
+        appState.today.history.forEach(e => {
+            entries.push({ time: e.time, ml: e.ml, type: e.source || '水分' });
+        });
+    } else {
+        // 過去日またはミルクの場合はランダム生成
+        const baseAmount = dayData.value;
+        const numEntries = Math.max(1, Math.floor(baseAmount / (isMilk ? 120 : 250)));
+        let remain = baseAmount;
+
+        for (let i = 0; i < numEntries; i++) {
+            if (remain <= 0) break;
+            const h = Math.floor(seededRandom(seed * 11 + i * 37) * 16) + 6;
+            const m = Math.floor(seededRandom(seed * 13 + i * 41) * 60);
+
+            // 最後の1回なら残りを全て
+            let ml = i === numEntries - 1 ? remain : Math.floor(remain / (numEntries - i));
+            // 少し揺らぎを入れる
+            if (i !== numEntries - 1) {
+                ml = Math.floor(ml * (0.8 + seededRandom(seed * i) * 0.4));
+            }
+            if (ml > 0) {
+                entries.push({ time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`, ml, type: isMilk ? 'ミルク' : '水分' });
+                remain -= ml;
+            }
+        }
     }
+
     entries.sort((a, b) => a.time.localeCompare(b.time));
     const total = entries.reduce((s, e) => s + e.ml, 0);
-    const dateStr = d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
-    el.innerHTML = `<div style="text-align:center;margin-bottom:12px;">
-    <h4 style="color:var(--primary);font-size:14px;margin-bottom:6px;">${dateStr}の記録</h4>
-    <span style="font-size:13px;font-weight:600;color:var(--primary);">合計: ${total}ml</span>
-    <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">※ サンプルデータ</span></div>
+
+    const contentEl = document.getElementById('modalHistoryContent');
+    contentEl.innerHTML = `<div style="text-align:center;margin-bottom:12px;">
+    <span style="font-size:15px;font-weight:700;color:var(--primary);">合計: ${total}ml</span>
+    ${dayData.isDummy ? `<span style="font-size:11px;color:var(--text-muted);margin-left:8px;display:block;">※ サンプルデータ</span>` : ''}</div>
     <div style="border-top:1px solid var(--border);padding-top:8px;">
-    ${entries.map(e => `<div class="history-entry"><span class="entry-time">${e.time}</span>
-      <div class="entry-amount"><span>${e.ml}ml</span><span class="entry-type ${isMilk ? 'milk' : ''}">${isMilk ? '🥛' : '💧'} ${e.type}</span></div></div>`).join('')}
+    ${entries.length > 0 ? entries.map(e => `<div class="history-entry" style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:#f8fafc;border-radius:8px;margin-bottom:8px;">
+        <span class="entry-time" style="font-size:16px;font-weight:600;">${e.time}</span>
+        <div class="entry-amount" style="font-size:15px;"><span style="font-weight:700;margin-right:8px;">${e.ml}ml</span><span style="font-size:12px;color:var(--text-muted);">${isMilk ? '🍼' : '💧'} ${e.type}</span></div></div>`).join('') : '<p style="text-align:center;color:var(--text-muted);">記録がありません</p>'}
     </div>`;
 
-    const container = document.getElementById(containerId);
-    if (container) container.style.display = 'block';
-    const canvas = document.getElementById(canvasId);
-    if (canvas) {
-        const slots = Array.from({ length: 24 }, (_, i) => ({ hour: i, ml: 0, hasData: false, isDummy: true }));
+    // グラフの描画
+    const container = document.getElementById('modalDetailChartContainer');
+    container.style.display = entries.length > 0 ? 'block' : 'none';
+    const canvas = document.getElementById('modalDetailChart');
+    if (canvas && entries.length > 0) {
+        const slots = Array.from({ length: 24 }, (_, i) => ({ hour: i, ml: 0, hasData: false, isDummy: dayData.isDummy }));
         entries.forEach(e => {
             const h = parseInt(e.time.split(':')[0]);
             if (h >= 0 && h < 24) { slots[h].ml += e.ml; slots[h].hasData = true; }
@@ -500,7 +624,17 @@ function loadDetailHistory(date, isMilk = false) {
         const active = slots.filter(s => s.hasData);
         drawBarChart(canvas, active, s => `${s.hour}:00`, s => s.ml, 'ml', colorTheme);
     }
+
+    // モーダル表示
+    document.getElementById('detailHistoryModal').classList.remove('hidden');
 }
+
+// モーダル閉じるイベント処理など
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('closeDetailModalBtn')?.addEventListener('click', () => {
+        document.getElementById('detailHistoryModal').classList.add('hidden');
+    });
+});
 
 // ===== Goal =====
 function updateGoalDisplay() {
@@ -526,21 +660,39 @@ function applyPowerSaveMode() { const a = document.querySelector('.app'); appSta
 
 // ===== Filter =====
 function updateFilterDates() {
-    const d = new Date(appState.filter.lastReplacementDate); d.setMonth(d.getMonth() + appState.filter.intervalMonths);
-    appState.filter.nextReplacementDate = d.toISOString().split('T')[0];
-    document.getElementById('filterModel').textContent = appState.filter.model;
-    document.getElementById('lastReplacementDate').textContent = appState.filter.lastReplacementDate;
-    document.getElementById('nextReplacementDate').textContent = appState.filter.nextReplacementDate;
+    const inputLast = document.getElementById('lastReplacementDateInput');
+    const inputNext = document.getElementById('nextReplacementDateInput');
+    if (inputLast) inputLast.value = appState.filter.lastReplacementDate;
+    if (inputNext) inputNext.value = appState.filter.nextReplacementDate;
 }
 
 // ===== Profile =====
 function loadProfileToForm(isOb) {
-    const pf = isOb ? 'onboarding' : 'profile';
+    const pf = isOb ? 'onboarding' : 'editProfile';
     const map = { Name: 'name', Address: 'address', Birth: 'birth', Sex: 'sex', Height: 'heightCm', Weight: 'weightKg', Activity: 'activity' };
     Object.entries(map).forEach(([k, v]) => { const el = document.getElementById(`${pf}${k}`); if (el) el.value = appState.profile[v] || ''; });
+
+    document.getElementById('previewName').textContent = appState.profile.name || '未登録';
+    document.getElementById('previewAddress').textContent = appState.profile.address || '未登録';
+    document.getElementById('previewBirth').textContent = appState.profile.birth || '未登録';
+    document.getElementById('previewSex').textContent = appState.profile.sex || '未選択';
+    document.getElementById('weightDisplayValue').textContent = appState.profile.weightKg > 0 ? `${appState.profile.weightKg} kg` : '-- kg';
 }
 function saveProfileFromForm(isOb) {
-    const pf = isOb ? 'onboarding' : 'profile';
+    const pf = isOb ? 'onboarding' : 'editProfile';
+    const reqFields = ['Name', 'Address', 'Birth', 'Sex'];
+    let valid = true;
+
+    reqFields.forEach(k => {
+        const el = document.getElementById(`${pf}${k}`);
+        if (el && (!el.value || el.value === '未選択')) valid = false;
+    });
+
+    if (!valid) {
+        showToast('必須項目を入力してください');
+        return false;
+    }
+
     const map = { Name: 'name', Address: 'address', Birth: 'birth', Sex: 'sex', Height: 'heightCm', Weight: 'weightKg', Activity: 'activity' };
     Object.entries(map).forEach(([k, v]) => {
         const el = document.getElementById(`${pf}${k}`); if (el) {
@@ -549,6 +701,10 @@ function saveProfileFromForm(isOb) {
         }
     });
     if (appState.profile.weightKg > 0) { appState.settings.goalMl = calculateRecommendedGoal(); updateUI(); }
+
+    // プレビュー用に再読み込み
+    loadProfileToForm(false);
+    return true;
 }
 
 // ===== Weight Chart =====
@@ -565,7 +721,8 @@ function updateWeightChart() {
         data.push({ date: d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' }), weight: parseFloat((baseWeight + trend + noise).toFixed(1)) });
     }
     const ctx = canvas.getContext('2d');
-    const w = canvas.width = canvas.offsetWidth, h = canvas.height = 200, p = 40;
+    const w = canvas.offsetWidth || 300, h = 200, p = 40;
+    canvas.width = w * 2; canvas.height = h * 2; ctx.scale(2, 2);
     const cw = w - p * 2, ch = h - p * 2;
     ctx.clearRect(0, 0, w, h);
     const weights = data.map(d => d.weight), minW = Math.min(...weights) - 0.5, maxW = Math.max(...weights) + 0.5, range = maxW - minW;
@@ -614,19 +771,80 @@ function generateGroupId() { const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; l
 
 // ===== DOMContentLoaded =====
 document.addEventListener('DOMContentLoaded', function () {
+    // Inject Dummy Data for Today on Start up
+    if (appState.today.history.length === 0) {
+        let dummyTotal = 0;
+        const currentHour = new Date().getHours();
+        [6, 8, 10, 12, 14, 16, 18, 20].forEach(h => {
+            if (h <= currentHour) {
+                const ml = Math.floor(seededRandom(h * 123) * 200) + 100;
+                appState.today.history.unshift({ time: `${String(h).padStart(2, '0')}:30`, ml, source: 'サンプル', id: Date.now() + h });
+                dummyTotal += ml;
+            }
+        });
+        if (dummyTotal === 0 && currentHour < 6) {
+            const ml = 200;
+            appState.today.history.unshift({ time: `${String(currentHour).padStart(2, '0')}:15`, ml, source: 'サンプル', id: Date.now() });
+            dummyTotal += ml;
+        }
+        appState.today.totalMl = dummyTotal;
+    }
+
     // Onboarding
     if (!appState.onboardingCompleted) { document.getElementById('onboardingModal').classList.remove('hidden'); loadProfileToForm(true); }
 
     // Footer nav
     document.querySelectorAll('[data-screen]').forEach(tab => tab.addEventListener('click', function () { showScreen(this.dataset.screen); }));
 
-    // Notify toggle
-    document.getElementById('notifyToggle').addEventListener('click', function () {
-        appState.settings.notifyEnabled = !appState.settings.notifyEnabled;
-        this.textContent = appState.settings.notifyEnabled ? '通知' : 'OFF';
-        this.style.opacity = appState.settings.notifyEnabled ? '1' : '.6';
-        showToast(appState.settings.notifyEnabled ? '通知ON' : '通知OFF');
+    // Server Connection Modal / Family Switcher
+    let connectedServer = 1;
+    function updateServerConnectionUI() {
+        const btn = document.getElementById('familyIndicator');
+        const connectedState = document.getElementById('serverConnectedState');
+        const disconnectedState = document.getElementById('serverDisconnectedState');
+        const currentName = document.getElementById('currentConnectionName');
+
+        if (!btn) return;
+        if (connectedServer) {
+            btn.innerHTML = `👥 家族 ${connectedServer}`;
+            btn.classList.add('connected');
+            if (connectedState) connectedState.classList.remove('hidden');
+            if (disconnectedState) disconnectedState.classList.add('hidden');
+            if (currentName) currentName.textContent = `家族 ${connectedServer}`;
+            btn.style.opacity = '1';
+        } else {
+            btn.innerHTML = `⚠️ 未接続`;
+            btn.classList.remove('connected');
+            if (connectedState) connectedState.classList.add('hidden');
+            if (disconnectedState) disconnectedState.classList.remove('hidden');
+            btn.style.opacity = '0.7';
+        }
+    }
+
+    document.getElementById('familyIndicator')?.addEventListener('click', function () {
+        document.getElementById('serverConnectionModal').classList.remove('hidden');
     });
+
+    document.getElementById('closeServerConnectionModalBtn')?.addEventListener('click', () => {
+        document.getElementById('serverConnectionModal').classList.add('hidden');
+    });
+
+    document.getElementById('disconnectServerBtn')?.addEventListener('click', () => {
+        connectedServer = null;
+        updateServerConnectionUI();
+        showToast('ウォーターサーバーとの接続を解除しました');
+    });
+
+    document.querySelectorAll('.connect-server-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            connectedServer = parseInt(this.dataset.server);
+            updateServerConnectionUI();
+            document.getElementById('serverConnectionModal').classList.add('hidden');
+            showToast(`家族 ${connectedServer} のサーバーに接続しました`);
+        });
+    });
+
+    updateServerConnectionUI();
 
     // Pour button
     const spb = document.getElementById('sidePourButton');
@@ -651,32 +869,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Onboarding
     document.getElementById('saveOnboardingBtn').addEventListener('click', () => {
-        saveProfileFromForm(true); appState.onboardingCompleted = true;
-        document.getElementById('onboardingModal').classList.add('hidden');
-        showToast('プロフィールを保存しました');
+        if (saveProfileFromForm(true)) {
+            appState.onboardingCompleted = true;
+            document.getElementById('onboardingModal').classList.add('hidden');
+            showToast('プロフィールを保存しました');
+        }
     });
     document.getElementById('skipOnboardingBtn').addEventListener('click', () => {
         appState.onboardingCompleted = true; document.getElementById('onboardingModal').classList.add('hidden');
     });
 
-    // Records tabs (upper only)
-    document.querySelectorAll('.records-header .records-tab').forEach(tab => tab.addEventListener('click', function () {
-        document.querySelectorAll('.records-header .records-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');
-        document.querySelectorAll('.records-content > .tab-content').forEach(c => c.classList.remove('active'));
-        const targetTab = document.getElementById(`${this.dataset.tab}Tab`);
-        if (targetTab) targetTab.classList.add('active');
-        updateRecordsContent(this.dataset.tab);
-    }));
-
-    // Period buttons
-    document.querySelectorAll('.period-btn').forEach(btn => btn.addEventListener('click', function () {
-        const cont = this.closest('.daily-selector,.week-selector,.month-selector,.milk-independent-section');
-        if (cont) {
-            cont.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); this.classList.add('active');
-            if (cont.classList.contains('milk-independent-section') || this.dataset.milkDaily) updateMilkRecords();
-            else updateRecordsContent(getCurrentTab());
-        }
-    }));
+    // (Removed records tabs and period buttons logic as it's no longer used)
 
     // Goal
     const gs = document.getElementById('goalSlider'), gi = document.getElementById('goalInput');
@@ -711,10 +914,55 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.querySelectorAll('.weekday-btn').forEach(b => b.addEventListener('click', function () { this.classList.toggle('active'); }));
 
-    // Profile
-    document.getElementById('saveProfileBtn')?.addEventListener('click', () => { saveProfileFromForm(false); showToast('保存しました'); });
+    // Profile Modals & Filter
+    document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+        loadProfileToForm(false); document.getElementById('profileEditModal').classList.remove('hidden');
+    });
+    document.getElementById('closeProfileEditBtn')?.addEventListener('click', () => {
+        document.getElementById('profileEditModal').classList.add('hidden');
+    });
+    document.getElementById('saveProfileEditBtn')?.addEventListener('click', () => {
+        if (saveProfileFromForm(false)) {
+            document.getElementById('profileEditModal').classList.add('hidden');
+            showToast('登録情報を更新しました'); updateWeightChart();
+        }
+    });
+
+    // Init default nextReplacementDate if empty (半年後)
+    if (!appState.filter.nextReplacementDate) {
+        const d = new Date(); d.setMonth(d.getMonth() + 6);
+        appState.filter.nextReplacementDate = d.toISOString().split('T')[0];
+    }
+
+    document.getElementById('setTodayFilterBtn')?.addEventListener('click', () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('lastReplacementDateInput').value = today;
+        appState.filter.lastReplacementDate = today; updateFilterDates();
+        showToast('今日の日付をセットしました');
+    });
+    document.getElementById('lastReplacementDateInput')?.addEventListener('change', function () {
+        if (this.value) { appState.filter.lastReplacementDate = this.value; updateFilterDates(); }
+    });
+    document.getElementById('nextReplacementDateInput')?.addEventListener('change', function () {
+        if (this.value) { appState.filter.nextReplacementDate = this.value; updateFilterDates(); }
+    });
+
+    document.getElementById('openContactModalBtn')?.addEventListener('click', () => {
+        document.getElementById('contactOptionsModal').classList.remove('hidden');
+    });
+    document.getElementById('closeContactModalBtn')?.addEventListener('click', () => {
+        document.getElementById('contactOptionsModal').classList.add('hidden');
+    });
+    document.getElementById('openFaqBtn')?.addEventListener('click', () => {
+        document.getElementById('contactOptionsModal').classList.add('hidden'); showToast('FAQページを開きます');
+    });
+    document.getElementById('openInquiryBtn')?.addEventListener('click', () => {
+        document.getElementById('contactOptionsModal').classList.add('hidden'); showToast('お問い合わせフォームを開きます');
+    });
+
     document.getElementById('recalcBtn')?.addEventListener('click', () => {
         const rec = calculateRecommendedGoal(); appState.settings.goalMl = rec;
+        const gs = document.getElementById('goalSlider'), gi = document.getElementById('goalInput');
         if (gs) gs.value = rec; if (gi) gi.value = rec; updateGoalDisplay(); updateUI();
         showToast(`推奨値 ${rec}ml を適用しました`);
     });
@@ -728,30 +976,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, true);
     });
 
-    // Detail history
-    document.getElementById('loadHistoryBtn')?.addEventListener('click', () => {
-        const d = document.getElementById('historyDate').value;
-        if (!d) { showToast('日付を選択してください'); return; }
-        loadDetailHistory(d, false);
-    });
-    document.getElementById('historyDate').value = new Date().toISOString().split('T')[0];
-
-    document.getElementById('loadMilkHistoryBtn')?.addEventListener('click', () => {
-        const d = document.getElementById('milkHistoryDate').value;
-        if (!d) { showToast('日付を選択してください'); return; }
-        loadDetailHistory(d, true);
-    });
-    const mDate = document.getElementById('milkHistoryDate');
-    if (mDate) mDate.value = new Date().toISOString().split('T')[0];
-
-    // Milk Tabs
-    document.querySelectorAll('.milk-tab').forEach(tab => tab.addEventListener('click', function () {
-        document.querySelectorAll('.milk-tab').forEach(t => t.classList.remove('active')); this.classList.add('active');
-        updateMilkRecords();
-    }));
-
     // Share button
-    document.getElementById('shareRecordsBtn')?.addEventListener('click', showSharePopup);
+    document.getElementById('shareRecordsBtn')?.addEventListener('click', shareRecords);
 
     // Group sharing
     document.getElementById('enableGroupSharing')?.addEventListener('change', function () {
@@ -779,8 +1005,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Filter & contract buttons
     document.getElementById('filterPurchaseBtn')?.addEventListener('click', () => showToast('購入ページに移動します'));
-    document.getElementById('repairRequestBtn')?.addEventListener('click', () => showToast('修理依頼を受け付けました'));
-    document.getElementById('contractContactBtn')?.addEventListener('click', () => showToast('メールアプリが開きます'));
     document.getElementById('contractInviteBtn')?.addEventListener('click', () => {
         const msg = 'PureNext水分管理アプリを使ってみませんか？\nhttps://purenext-app.com';
         if (navigator.share) navigator.share({ title: 'PureNext', text: msg }).catch(() => { });
