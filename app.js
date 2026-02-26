@@ -936,6 +936,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (this.value) { appState.filter.lastReplacementDate = this.value; updateFilterDates(); }
     });
 
+    document.getElementById('viewStatementBtn')?.addEventListener('click', () => {
+        showToast('マイページを開きます');
+        // window.open('https://mypage.purenext.jp', '_blank'); // 必要に応じてパス調整
+    });
+
     document.getElementById('openContactModalBtn')?.addEventListener('click', () => {
         document.getElementById('contactOptionsModal').classList.remove('hidden');
     });
